@@ -1,0 +1,54 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+services:
+
+  peer0.org2.lychee.com:
+    container_name: peer0.org2.lychee.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.org2.lychee.com
+    extra_hosts:
+      - "orderer1.lychee.com:10.0.200.111"
+      - "orderer2.lychee.com:10.0.200.113"
+      - "orderer3.lychee.com:10.0.200.114"
+      - "peer0.org1.lychee.com:10.0.200.113"
+      - "peer1.org1.lychee.com:10.0.200.114"
+      - "peer1.org2.lychee.com:10.0.200.116"
+  lycheecli:
+    container_name: lycheecli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_PEER_ID=lycheecli
+      - CORE_PEER_ADDRESS=peer0.org2.lychee.com:7051
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.lychee.com/peers/peer0.org2.lychee.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.lychee.com/peers/peer0.org2.lychee.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.lychee.com/peers/peer0.org2.lychee.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.lychee.com/users/Admin@org2.lychee.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../chaincode/go/:/opt/gopath/src/github.com/hyperledger/fabric/lychees/chaincode/go
+        - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+        - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+        - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - peer0.org2.lychee.com
+    extra_hosts:
+      - "orderer1.lychee.com:10.0.200.111"
+      - "orderer2.lychee.com:10.0.200.113"
+      - "orderer3.lychee.com:10.0.200.114"
+      - "peer0.org1.lychee.com:10.0.200.113"
+      - "peer1.org1.lychee.com:10.0.200.114"
+      - "peer0.org2.lychee.com:10.0.200.115"
+      - "peer1.org2.lychee.com:10.0.200.116"

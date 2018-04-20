@@ -1,0 +1,29 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+services:
+
+  orderer1.lychee.com:
+    extends:
+      file:   base/docker-compose-base.yaml
+      service: orderer1.lychee.com
+    container_name: orderer1.lychee.com
+    volumes:
+      - ./crypto-config/ordererOrganizations/lychee.com/orderers/orderer1.lychee.com/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config/ordererOrganizations/lychee.com/orderers/orderer1.lychee.com/tls:/var/hyperledger/orderer/tls
+    extra_hosts:
+      - "z1:10.0.200.113"
+      - "z2:10.0.200.114"
+      - "z3:10.0.200.115"
+      - "k4:10.0.200.116"
+      - "k1:10.0.200.113"
+      - "k2:10.0.200.114"
+      - "k3:10.0.200.115"    
+      - "orderer1.lychee.com:10.0.200.111"
+      - "orderer2.lychee.com:10.0.200.113"
+      - "orderer3.lychee.com:10.0.200.114"
+

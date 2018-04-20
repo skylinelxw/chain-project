@@ -1,0 +1,22 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+services:
+
+  z3:
+    extends:
+      file: base/kafka-base.yaml
+      service: zookeeper
+    container_name: z3
+    hostname: z3
+    environment:
+      - ZOO_MY_ID=3
+      - ZOO_SERVERS=server.1=z1:2888:3888 server.2=z2:2888:3888 server.3=z3:2888:3888
+    extra_hosts:
+      - "z1:10.0.200.113"
+      - "z2:10.0.200.114"
+      - "z3:10.0.200.115"
