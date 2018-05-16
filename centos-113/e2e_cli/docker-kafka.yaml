@@ -25,6 +25,9 @@ services:
       - KAFKA_DEFAULT_REPLICATION_FACTOR=3
       # 指向Zookeeper节点的集合，其中包含ZK的集合。
       - KAFKA_ZOOKEEPER_CONNECT=z1:2181,z2:2181,z3:2181
+    volumes:
+       # kafka数据存储路径，映射到本地
+       - ./chainData/kafka/k1/:/tmp/kafka-logs/
     extra_hosts:
       - "z1:10.0.200.113"
       - "z2:10.0.200.114"

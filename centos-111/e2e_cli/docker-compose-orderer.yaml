@@ -13,6 +13,8 @@ services:
       service: orderer1.lychee.com
     container_name: orderer1.lychee.com
     volumes:
+      # 数据固化，将orderer的数据映射到本地
+      - ./chainData/orderer/orderer1/:/var/hyperledger/production/
       - ./crypto-config/ordererOrganizations/lychee.com/orderers/orderer1.lychee.com/msp:/var/hyperledger/orderer/msp
       - ./crypto-config/ordererOrganizations/lychee.com/orderers/orderer1.lychee.com/tls:/var/hyperledger/orderer/tls
     extra_hosts:

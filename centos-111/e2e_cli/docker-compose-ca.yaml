@@ -1,0 +1,21 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+services:
+
+  ca0.org1.example.com: 
+    container_name: ca0.org1.lychee.com
+    image: hyperledger/fabric-ca 
+    environment: 
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server 
+      - FABRIC_CA_SERVER_CA_NAME=ca0-org1 
+      - FABRIC_CA_SERVER_TLS_ENABLED=false 
+    # docker启动后启动一个ca server ，注意修改根证书和admin密码
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.lychee.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/b5e705faad947dbc784a4d335d6754ef16097ac1686e86f3c75d04dc720d6f38_sk -b admin:adminpw -d' 
+    volumes: 
+      - ./crypto-config/peerOrganizations/org1.lychee.com/ca/:/etc/hyperledger/fabric-ca-server-config 
+    ports: 
+      - "7054:7054" 

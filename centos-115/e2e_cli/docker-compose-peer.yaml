@@ -7,11 +7,20 @@ version: '2'
 
 services:
 
+  couchdb0.org2.lychee.com:
+    container_name: couchdb0.org2.lychee.com
+    image: hyperledger/fabric-couchdb
+    volumes:
+      - ./chainData/couchdb/couchdb0org2:/opt/couchdb/data
+
   peer0.org2.lychee.com:
     container_name: peer0.org2.lychee.com
     extends:
       file:  base/docker-compose-base.yaml
       service: peer0.org2.lychee.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0.org2.lychee.com:5984
     extra_hosts:
       - "orderer1.lychee.com:10.0.200.111"
       - "orderer2.lychee.com:10.0.200.113"
