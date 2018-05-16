@@ -1,42 +1,72 @@
-Hyperledger fabric 1.0 多级部署实战;
+Hyperledger fabric  多机部署实战;
+
+ 官方fabric的更新速度还是相对较快的，v1.0跟v1.1还是有一些差异的，由于当前要上生产的时候发现v1.1“更好”一点，所以升级到了v1.1，所以做了相应的改动。
+
+ 本工程v2版本更新内容如下：
+	1、增加了couchdb、ca节点；
+	2、增加数据持久化配置；
+	3、升级适配fabric1.1
+	需要先升级fabric环境，重新拉取fabric，拉取相应的docker镜像
 
 一、环境准备
 本文实战的前置条件：
-	1.安装部署了 fabric 1.0；
-	2.成功运行fabric 1.0 e2e_cli单机模式；（直接运行example脚本即可）
+	1.安装部署了 fabric ；
+	2.成功运行fabric e2e_cli单机模式；（直接运行example脚本即可）
 	3.单机部署，可参考文章：https://www.jianshu.com/p/4ae6d070ddbb
 单机部署比较简单，基本就是docker、go安装和镜像拉取、案例拉取，运行脚本即可。
+
+这里简单再讲下安装环境：
+	1、安装docker、docker-compose、go、gcc、git，这个可参考以上链接
+	2、创建一个目录：/opt/gopath/src/github.com/hyperledger ,拉取最新的fabric: git clone https://github.com/hyperledger/fabric.git
+	3、进入fabric，运行scripts/bootstrap.sh 拉取镜像
+	4、拉取完成后，make release
+	5、进入examples/e2e_cli  运行./network_setup.sh up 最终看到all good 即可，记得下次运行前，先./network_setup.sh down 
+	6、大功告成
+
+升级：
+	尝试过只拉取镜像，fabric不拉取最新的，结果发现有些配置会不一样导致程序报错，所以建议重新拉取一下fabric 然后再拉去下镜像
+
 
 操作系统：centos7.0；
 
 二、目标
-本案例旨在部署包含3个orderer节点、4个peer节点（两个组织）的farbic基础网络架构，排序服务使用多进程的kafka共识：其中包括4个kafka节点和3个zookeeper节点；基础网络稳定后，就不可以全心投入智能合约研发和顶层业务定制，后者才是重点。
+本案例旨在部署包含3个orderer节点、4个peer节点（两个组织）的farbic基础网络架构
+排序服务使用多进程的kafka共识：其中包括4个kafka节点和3个zookeeper节点；
+peer节点状态数据库用的是couchdb，所以包括了4个couchdb节点；
+使用ca服务器，每个组织一个ca服务器，所以包括了2个ca节点；
+基础网络稳定后，就不可以全心投入智能合约研发和顶层业务定制，后者才是重点。
 
 部署情况：
 
 10.0.200.111机器：
 	|-orderer1.lychee.com
+	|-ca0.org1.lychee.com
 
 10.0.200.113机器：
 	|-orderer2.lychee.com
 	|-peer0.org1.lychee.com
 	|-z1   (zookeeper)
 	|-k1   (kafka)
+	|-couchdb0.org1.lychee.com
 
 10.0.200.114机器：
 	|-orderer3.lychee.com
 	|-peer1.org1.lychee.com
 	|-z2
 	|-k2
+	|-couchdb1.org1.lychee.com
 
 10.0.200.115机器：
 	|-peer0.org2.lychee.com
 	|-z3
 	|-k3
+	|-couchdb0.org2.lychee.com
 
 10.0.200.116机器：
 	|-peer1.org2.lychee.com
 	|-k4
+	|-ca0.org2.lychee.com
+	|-couchdb1.org2.lychee.com
 
 三、文件说明
 部署最终要的是要理解，不然每次遇到问题就会没有头绪。
@@ -66,6 +96,9 @@ Hyperledger fabric 1.0 多级部署实战;
 
 		docker-kafka.yaml kafka容器配置文件
 			|-base/kafka-base.yaml
+
+		docker-compose-ca.yaml ca配置文件
+			主要配置了ca的根证书（记得修改为实际的，否则ca会挂），ca服务器的管理员账户和密码也就是所谓的admin／adminpw，生产的时候改成自己知道的就好
 
 		base/docker-compose-base.yaml  基础配置文件
 		base/orderer-base.yaml  基础配置文件
@@ -131,6 +164,10 @@ Hyperledger fabric 1.0 多级部署实战;
 	docker-compose -f docker-compose-peer.yaml up -d
 	分别在每台机器上启动
 
+   e. ca服务器节点启动
+	docker-compose -f docker-compose-ca.yaml up -d
+	分别在需要的机器上启动
+
 5、运行测试脚本
    测试脚本的修改目前只修改了org1的peer0节点的脚步，即centos-113上的scripts中的文件；
    进入centos-113节点：
@@ -154,5 +191,18 @@ Hyperledger fabric 1.0 多级部署实战;
 6、运行过程中，尝试看对应节点的日志
 	docker logs peerx.orgx.lychee.com
 
+7、铲掉重来，无法报错问题
+	因为最新的配置增加了数据持久化，所以需要每次
+
+8、 BAD_REQUEST -- error authorizing update: error validating DeltaSet: invalid mod_policy for element [Policy] /Channel/Application/Writers: mod_policy not set
+	铲掉重来可以解决，非常有可能是第一次搭建没有删除干净
+9、ca启动后一会就宕机的原因是docker.yaml中的文件名称配置问题
+
+10、'' has invalid keys: capabilities
+
+11、创世区块通道tx生成时，x509问题，这个是之前旧证书混淆导致，删除历史的即可
+
+还有一些设计或问题详细描述见：
+https://www.jianshu.com/p/baaa828577e6
 
 持续整理中……
